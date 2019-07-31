@@ -35,22 +35,18 @@ int main()
     const Vector Y{0, 0.002, 0};
 
     std::vector<Object *> scene_objects;
-    scene_objects.push_back(new Triangle{{-1,0,0},
-                                        {1,0,0},
-                                        {0,1.73,0}});
-    scene_objects.back()->set_color({0,0,255});
-    scene_objects.push_back(new Triangle{{2,0,2},
-                                        {1,1.73,2},
-                                        {0,0,2}});
-    scene_objects.back()->set_color({0,255,0});
-    scene_objects.push_back(new Triangle{{-0.25,0.75,-1},
-                                        {0.75,0.75,-1},
-                                        {0.25,2,-1}});
-    scene_objects.back()->set_color({255,0,0});
-
+    scene_objects.push_back(new Triangle{{-2, 0, -1},
+                                         {2, 0, -1},
+                                         {0, 3, -1.1}});
+    scene_objects.back()->set_color({0, 0, 255});
+    scene_objects.push_back(new Triangle{{2, 0, -5},
+                                         {-2, 0, -5},
+                                         {0, 3, -5}});
+    scene_objects.back()->set_color({0, 255, 0});
 
     int height = 512;
     int width = 512;
+    const int max_hit_bounces{100};
 
     outfile << "P6 " << height << " " << width << " " << "255 ";
 
@@ -61,37 +57,50 @@ int main()
             Vector ray_origin{0, 1, -4};
             Vector ray_direction = Vector{X * (x - 0.5) + Y * (y - 0.5) + Z}.unit();
 
+            Vector ray_hit_at,
+                ray_bounced_direction,
+                normal;
+
             float distance_to_hit;
-            bool an_object_was_hit{false};
-            float min_hit_distance{std::numeric_limits<float>::max()};
-            Object *closest_object_ptr{nullptr};
 
-            for (const auto &object : scene_objects) {
-                if (object->is_hit_by_ray(ray_origin,
-                                          ray_direction,
-                                          distance_to_hit,
-                                          color)) {
-                    an_object_was_hit = true;
+            for (int bounce = 0; bounce <= max_hit_bounces; ++bounce) {
+                bool an_object_was_hit{false};
+                float min_hit_distance{std::numeric_limits<float>::max()};
+                Object *closest_object_ptr{nullptr};
 
-                    if (distance_to_hit < min_hit_distance) {
-                        min_hit_distance = distance_to_hit;
-                        closest_object_ptr = object;
+                for (const auto &object : scene_objects) {
+                    if (object->is_hit_by_ray(ray_origin,
+                                              ray_direction,
+                                              ray_hit_at,
+                                              ray_bounced_direction,
+                                              distance_to_hit,
+                                              color)) {
+                        an_object_was_hit = true;
+
+                        if (distance_to_hit < min_hit_distance) {
+                            min_hit_distance = distance_to_hit;
+                            closest_object_ptr = object;
+                        }
                     }
                 }
-            }
 
-            if (an_object_was_hit) {
-                closest_object_ptr->is_hit_by_ray(ray_origin,
-                                                  ray_direction,
-                                                  distance_to_hit,
-                                                  color);
-            }
-            else {
-                if (ray_direction.y < 0) {
-                    color = get_ground_color(ray_origin, ray_direction);
+                if (an_object_was_hit) {
+                    closest_object_ptr->is_hit_by_ray(ray_origin,
+                                                      ray_direction,
+                                                      ray_hit_at,
+                                                      ray_bounced_direction,
+                                                      distance_to_hit,
+                                                      color);
+                    ray_origin = ray_hit_at;
+                    ray_direction = ray_bounced_direction;
                 }
                 else {
-                    color = get_sky_color(ray_direction);
+                    if (ray_direction.y < 0) {
+                        color = get_ground_color(ray_origin, ray_direction);
+                    }
+                    else {
+                        color = get_sky_color(ray_direction);
+                    }
                 }
             }
 

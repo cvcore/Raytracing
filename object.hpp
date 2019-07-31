@@ -13,6 +13,8 @@ public:
 
     virtual bool is_hit_by_ray(const Vector &incoming_ray_origin,
                                const Vector &incoming_ray_direction,
+                               Vector& outgoing_ray_origin,
+                               Vector& outgoing_ray_direction,
                                float &hit_distance,
                                Vector &hit_color) const = 0;
 
@@ -35,6 +37,8 @@ public:
 
     bool is_hit_by_ray(const Vector &incoming_ray_origin,
                        const Vector &incoming_ray_direction,
+                       Vector &outgoing_ray_origin,
+                       Vector &outgoing_ray_direction,
                        float &hit_distance,
                        Vector &hit_color) const
     {
@@ -68,6 +72,13 @@ public:
             return false;
 
         hit_distance = (incoming_ray_direction * ray_factor).norm();
+        hit_color = color;
+
+        const Vector n = normal;
+        outgoing_ray_origin = p0 + u*u_factor + v*v_factor;
+        outgoing_ray_direction = (incoming_ray_direction 
+        - n.unit() * (incoming_ray_direction.dot(n.unit())) * 2).unit();
+
         hit_color = color;
 
         return true;
