@@ -124,11 +124,19 @@ public:
         if (b < threshold) {
             return false;
         }
-        outgoing_ray_direction = incoming_ray_direction;
-        outgoing_ray_origin = incoming_ray_origin;
-        // TODO
 
-        hit_distance = 1.f;
+        const float s = std::sqrt(std::pow(p.norm(), 2) - std::pow(b, 2));
+        const float t = std::sqrt(std::pow(radius, 2) - std::pow(s, 2));
+        hit_distance = b - t;
+
+        if (hit_distance < 0)
+            return false;
+
+        outgoing_ray_origin = incoming_ray_origin + incoming_ray_direction * hit_distance;
+        const Vector normal = (-p + incoming_ray_direction * hit_distance).unit();
+        outgoing_ray_direction = (incoming_ray_direction 
+        - normal.unit() * (incoming_ray_direction.dot(normal.unit())) * 2).unit();
+
         hit_color = color;
         object_reflectivity = reflectivity;
         return true;

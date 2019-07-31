@@ -49,10 +49,10 @@ int main()
 
     scene_objects.push_back(new Sphere({1,2,0}, 0.5));
     scene_objects.back()->set_color({0, 0, 0});
-    scene_objects.back()->set_reflectivity(0.);
+    scene_objects.back()->set_reflectivity(0.95);
     scene_objects.push_back(new Sphere({-1.25,0.8,0}, 0.25));
     scene_objects.back()->set_color({255, 0, 0});
-    scene_objects.back()->set_reflectivity(0.);
+    scene_objects.back()->set_reflectivity(0.05);
 
 
     int height = 512;
