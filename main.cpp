@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
+//#include <opencv2/opencv.hpp>
 
 #include "object.hpp"
 #include "vector.hpp"
@@ -47,6 +48,8 @@ int main()
     int height = 512;
     int width = 512;
     const int max_hit_bounces{100};
+
+//    cv::Mat out_image(height, width, CV_8UC3);
 
     outfile << "P6 " << height << " " << width << " " << "255 ";
 
@@ -107,6 +110,7 @@ int main()
             outfile << static_cast<unsigned char>(color.x)
                     << static_cast<unsigned char>(color.y)
                     << static_cast<unsigned char>(color.z);
+            
         }
     }
 
