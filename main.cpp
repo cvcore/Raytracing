@@ -35,15 +35,24 @@ int main()
     const Vector Y{0, 0.002, 0};
 
     std::vector<Object *> scene_objects;
-    scene_objects.push_back(new Triangle{{-1, 0, 0},
-                                         {1, 0, 0},
-                                         {0, 1.73, 0}});
+    scene_objects.push_back(new Triangle{{-1,0,0},
+                                        {1,0,0},
+                                        {0,1.73,0}});
+    scene_objects.back()->set_color({0,0,255});
+    scene_objects.push_back(new Triangle{{2,0,2},
+                                        {1,1.73,2},
+                                        {0,0,2}});
+    scene_objects.back()->set_color({0,255,0});
+    scene_objects.push_back(new Triangle{{-0.25,0.75,-1},
+                                        {0.75,0.75,-1},
+                                        {0.25,2,-1}});
+    scene_objects.back()->set_color({255,0,0});
+
 
     int height = 512;
     int width = 512;
 
-    outfile << "P6 " << height << " " << width << " "
-            << "255 ";
+    outfile << "P6 " << height << " " << width << " " << "255 ";
 
     for (int y = 256; y >= -255; --y) {
         for (int x = -255; x <= 256; ++x) {

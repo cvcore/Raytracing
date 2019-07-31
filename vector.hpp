@@ -50,7 +50,7 @@ public:
 
     Vector unit() const
     {
-        return (*this) * (1. / this->norm());
+        return (*this) * (1. / norm());
     }
 };
 

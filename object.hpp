@@ -26,19 +26,19 @@ class Triangle : public Object
 {
 public:
     Triangle(const Vector& p0, const Vector& p1, const Vector& p2)
-        : p0(p1), p1(p1), p2(p2)
+        : p0(p0), p1(p1), p2(p2)
     {
         u = p1 - p0;
         v = p2 - p0;
-        normal = u.cross(v);
+        normal = v.cross(u);
     }
 
     bool is_hit_by_ray(const Vector &incoming_ray_origin,
-                               const Vector &incoming_ray_direction,
-                               float &hit_distance,
-                               Vector &hit_color) const
+                       const Vector &incoming_ray_direction,
+                       float &hit_distance,
+                       Vector &hit_color) const
     {
-        if (normal.dot(incoming_ray_direction) < 0)
+        if (normal.dot(incoming_ray_direction) > 0)
             return false;
 
         const float& pox{p0.x};
@@ -67,7 +67,7 @@ public:
             ray_factor < 0)
             return false;
 
-        hit_distance = incoming_ray_direction.norm() * ray_factor;
+        hit_distance = (incoming_ray_direction * ray_factor).norm();
         hit_color = color;
 
         return true;
