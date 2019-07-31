@@ -38,12 +38,14 @@ int main()
     std::vector<Object *> scene_objects;
     scene_objects.push_back(new Triangle{{-2, 0, -1},
                                          {2, 0, -1},
-                                         {0, 3, -1.1}});
+                                         {0, 3, -1}});
     scene_objects.back()->set_color({0, 0, 255});
+    scene_objects.back()->set_reflectivity(0.8);
     scene_objects.push_back(new Triangle{{2, 0, -5},
                                          {-2, 0, -5},
                                          {0, 3, -5}});
     scene_objects.back()->set_color({0, 255, 0});
+    scene_objects.back()->set_reflectivity(0.8);
 
     int height = 512;
     int width = 512;
@@ -57,6 +59,8 @@ int main()
         for (int x = -255; x <= 256; ++x) {
 
             Vector color{0, 0, 0};
+            Vector final_color{0, 0, 0};
+
             Vector ray_origin{0, 1, -4};
             Vector ray_direction = Vector{X * (x - 0.5) + Y * (y - 0.5) + Z}.unit();
 
@@ -65,6 +69,8 @@ int main()
                 normal;
 
             float distance_to_hit;
+            float reflectivity_at_hit;
+            float ray_energy_left = 1.f;
 
             for (int bounce = 0; bounce <= max_hit_bounces; ++bounce) {
                 bool an_object_was_hit{false};
@@ -77,7 +83,8 @@ int main()
                                               ray_hit_at,
                                               ray_bounced_direction,
                                               distance_to_hit,
-                                              color)) {
+                                              color,
+                                              reflectivity_at_hit)) {
                         an_object_was_hit = true;
 
                         if (distance_to_hit < min_hit_distance) {
@@ -93,23 +100,32 @@ int main()
                                                       ray_hit_at,
                                                       ray_bounced_direction,
                                                       distance_to_hit,
-                                                      color);
+                                                      color,
+                                                      reflectivity_at_hit);
                     ray_origin = ray_hit_at;
                     ray_direction = ray_bounced_direction;
                 }
                 else {
                     if (ray_direction.y < 0) {
                         color = get_ground_color(ray_origin, ray_direction);
+                        reflectivity_at_hit = 0.f;
                     }
                     else {
                         color = get_sky_color(ray_direction);
+                        reflectivity_at_hit = 0.f;
                     }
                 }
+
+                final_color = final_color + (color * (ray_energy_left * (1 - reflectivity_at_hit)));
+                ray_energy_left *= reflectivity_at_hit;
+
+                if (ray_energy_left <= 0)
+                    break;
             }
 
-            outfile << static_cast<unsigned char>(color.x)
-                    << static_cast<unsigned char>(color.y)
-                    << static_cast<unsigned char>(color.z);
+            outfile << static_cast<unsigned char>(final_color.x)
+                    << static_cast<unsigned char>(final_color.y)
+                    << static_cast<unsigned char>(final_color.z);
             
         }
     }

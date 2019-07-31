@@ -6,21 +6,29 @@ class Object
 {
 public:
     Object()
-        : color(255, 255, 255)
+        : color(255, 255, 255),
+          reflectivity(1)
     {}
 
     Vector color;
+    float reflectivity;
 
     virtual bool is_hit_by_ray(const Vector &incoming_ray_origin,
                                const Vector &incoming_ray_direction,
                                Vector& outgoing_ray_origin,
                                Vector& outgoing_ray_direction,
                                float &hit_distance,
-                               Vector &hit_color) const = 0;
+                               Vector &hit_color,
+                               float& object_reflectivity) const = 0;
 
     void set_color(const Vector& v)
     {
         color = v;
+    }
+    
+    void set_reflectivity(float v)
+    {
+        reflectivity = v;
     }
 };
 
@@ -40,7 +48,8 @@ public:
                        Vector &outgoing_ray_origin,
                        Vector &outgoing_ray_direction,
                        float &hit_distance,
-                       Vector &hit_color) const
+                       Vector &hit_color,
+                       float& object_reflectivity) const
     {
         if (normal.dot(incoming_ray_direction) > 0)
             return false;
@@ -80,6 +89,7 @@ public:
         - n.unit() * (incoming_ray_direction.dot(n.unit())) * 2).unit();
 
         hit_color = color;
+        object_reflectivity = reflectivity;
 
         return true;
     }
