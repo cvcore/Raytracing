@@ -32,13 +32,40 @@ int main()
     std::ofstream outfile("outfile.ppm");
 
     const Vector Z{0, 0, 1};
-    const Vector X{0.002, 0, 0};
-    const Vector Y{0, 0.002, 0};
+    const Vector X{0.001, 0, 0};
+    const Vector Y{0, 0.001, 0};
 
     std::vector<Object *> scene_objects;
-    // scene_objects.push_back(new Triangle{{-2, 0, -1},
-    //                                      {2, 0, -1},
-    //                                      {0, 3, -1}});
+
+    scene_objects.push_back(new Triangle{Vector{0, 0, 0},
+                                         Vector{-1, 1, 0},
+                                         Vector{0, 1, 1}});
+    scene_objects.push_back(new Triangle{Vector{0, 0, 0},
+                                         Vector{0, 1, -1},
+                                         Vector{-1, 1, 0}});
+    scene_objects.push_back(new Triangle{Vector{0, 0, 0},
+                                         Vector{1, 1, 0},
+                                         Vector{0, 1, -1}});
+    scene_objects.push_back(new Triangle{Vector{0, 0, 0},
+                                         Vector{0, 1, 1},
+                                         Vector{1, 1, 0}});
+    /// Top half
+    scene_objects.push_back(new Triangle{Vector{0, 2, 0},
+                                         Vector{0, 1, 1},
+                                         Vector{-1, 1, 0}});
+    scene_objects.push_back(new Triangle{Vector{0, 2, 0},
+                                         Vector{1, 1, 0},
+                                         Vector{0, 1, 1}});
+    scene_objects.push_back(new Triangle{Vector{0, 2, 0},
+                                         Vector{0, 1, -1},
+                                         Vector{1, 1, 0}});
+    scene_objects.push_back(new Triangle{Vector{0, 2, 0},
+                                         Vector{-1, 1, 0},
+                                         Vector{0, 1, -1}});
+
+    // scene_objects.push_back(new Triangle{{-2, 0, 1},
+    //                                      {2, 0, 1},
+    //                                      {0, 3, 1}});
     // scene_objects.back()->set_color({0, 0, 255});
     // scene_objects.back()->set_reflectivity(0.8);
     // scene_objects.push_back(new Triangle{{2, 0, -5},
@@ -52,19 +79,19 @@ int main()
     scene_objects.back()->set_reflectivity(0.95);
     scene_objects.push_back(new Sphere({-1.25,0.8,0}, 0.25));
     scene_objects.back()->set_color({255, 0, 0});
-    scene_objects.back()->set_reflectivity(0.05);
+    scene_objects.back()->set_reflectivity(0.95);
 
 
-    int height = 512;
-    int width = 512;
+    int height = 1024;
+    int width = 1024;
     const int max_hit_bounces{100};
 
 //    cv::Mat out_image(height, width, CV_8UC3);
 
     outfile << "P6 " << height << " " << width << " " << "255 ";
 
-    for (int y = 256; y >= -255; --y) {
-        for (int x = -255; x <= 256; ++x) {
+    for (int y = height/2; y >= -(height/2 - 1); --y) {
+        for (int x = -(width/2 - 1); x <= width/2; ++x) {
 
             Vector color{0, 0, 0};
             Vector final_color{0, 0, 0};
