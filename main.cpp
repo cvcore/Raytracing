@@ -120,9 +120,9 @@ int main()
                                               distance_to_hit,
                                               color,
                                               reflectivity_at_hit)) {
-                        an_object_was_hit = true;
 
                         if (distance_to_hit < min_hit_distance) {
+                            an_object_was_hit = true;
                             min_hit_distance = distance_to_hit;
                             closest_object_ptr = object;
                         }
