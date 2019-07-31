@@ -96,3 +96,41 @@ public:
 
     Vector p0, p1, p2, u, v, normal;
 };
+
+class Sphere : public Object
+{
+public:
+    Sphere(const Vector &center,
+           float radius)
+        : center(center),
+          radius(radius)
+    { }
+
+    Vector center;
+    float radius;
+
+    bool is_hit_by_ray(const Vector &incoming_ray_origin,
+                       const Vector &incoming_ray_direction,
+                       Vector &outgoing_ray_origin,
+                       Vector &outgoing_ray_direction,
+                       float &hit_distance,
+                       Vector &hit_color,
+                       float& object_reflectivity) const
+    {
+        const Vector p = center - incoming_ray_origin;
+        const float threshold = std::sqrt(p.norm() * p.norm() - radius*radius);
+        const float b = p.dot(incoming_ray_direction);
+
+        if (b < threshold) {
+            return false;
+        }
+        outgoing_ray_direction = incoming_ray_direction;
+        outgoing_ray_origin = incoming_ray_origin;
+        // TODO
+
+        hit_distance = 1.f;
+        hit_color = color;
+        object_reflectivity = reflectivity;
+        return true;
+    }
+};

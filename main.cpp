@@ -36,16 +36,24 @@ int main()
     const Vector Y{0, 0.002, 0};
 
     std::vector<Object *> scene_objects;
-    scene_objects.push_back(new Triangle{{-2, 0, -1},
-                                         {2, 0, -1},
-                                         {0, 3, -1}});
-    scene_objects.back()->set_color({0, 0, 255});
-    scene_objects.back()->set_reflectivity(0.8);
-    scene_objects.push_back(new Triangle{{2, 0, -5},
-                                         {-2, 0, -5},
-                                         {0, 3, -5}});
-    scene_objects.back()->set_color({0, 255, 0});
-    scene_objects.back()->set_reflectivity(0.8);
+    // scene_objects.push_back(new Triangle{{-2, 0, -1},
+    //                                      {2, 0, -1},
+    //                                      {0, 3, -1}});
+    // scene_objects.back()->set_color({0, 0, 255});
+    // scene_objects.back()->set_reflectivity(0.8);
+    // scene_objects.push_back(new Triangle{{2, 0, -5},
+    //                                      {-2, 0, -5},
+    //                                      {0, 3, -5}});
+    // scene_objects.back()->set_color({0, 255, 0});
+    // scene_objects.back()->set_reflectivity(0.8);
+
+    scene_objects.push_back(new Sphere({1,2,0}, 0.5));
+    scene_objects.back()->set_color({0, 0, 0});
+    scene_objects.back()->set_reflectivity(0.);
+    scene_objects.push_back(new Sphere({-1.25,0.8,0}, 0.25));
+    scene_objects.back()->set_color({255, 0, 0});
+    scene_objects.back()->set_reflectivity(0.);
+
 
     int height = 512;
     int width = 512;
