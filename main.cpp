@@ -4,10 +4,13 @@
 #include <vector>
 #include <opencv2/opencv.hpp>
 #include <ctime>
+#include <iomanip>
+#include <sstream>
 
 #include "object.hpp"
 #include "vector.hpp"
 #include "helper.hpp"
+#include "rotation_matrix.hpp"
 
 Vector get_ground_color(const Vector& ray_origin,
                         const Vector& ray_direction,
@@ -131,19 +134,22 @@ int main(int argc, char** argv)
     const int max_hit_bounces{100};
 
     cv::Mat out_image(height, width, CV_8UC3);
+    std::vector<cv::Mat> image_frames;
 
     outfile << "P6 " << height << " " << width << " "
             << "255 ";
 
-    const clock_t begin_time = std::clock(); 
 
-    const int MAX_FRAMES = 256,
-        AA_samples = 8;
+    const int MAX_FRAMES = 16,
+        AA_samples = 2;
 
     for (int frame_idx = 0; frame_idx < MAX_FRAMES; ++frame_idx) {
         int image_idx = 0;
         float x_sample = random_offset();
         float y_sample = random_offset();
+
+        const clock_t begin_time = std::clock(); 
+        RotationMatrix camera_rotation(0.f, 0.f, 0.2f * frame_idx);
         for (int y = height / 2; y >= -(height / 2 - 1); --y) {
             for (int x = -(width / 2 - 1); x <= width / 2; ++x) {
                 Vector aa_color{0, 0, 0};
@@ -154,6 +160,7 @@ int main(int argc, char** argv)
 
                     Vector ray_origin{0, 1, -4};
                     Vector ray_direction = Vector{X * (x + random_offset() - 0.5f) + Y * (y + random_offset() - 0.5f) + Z}.unit();
+                    ray_direction = camera_rotation * ray_direction;
 
                     // DoF
                     Vector sensor_shift{random_offset()*0.1f, random_offset()*0.1f, 0};
@@ -294,13 +301,20 @@ int main(int argc, char** argv)
         }
 
         float time_elapsed = float(std::clock() - begin_time) / CLOCKS_PER_SEC;
-        std::cout << "Time elapsed: " << time_elapsed << " FPS: " << 1. / time_elapsed << "\n";
+        std::cout << "Rendering [" << frame_idx << "/" << MAX_FRAMES << "] " << "Time elapsed: " << time_elapsed << " FPS: " << 1. / time_elapsed << "\n";
 
         if (not write_outfile) {
             cv::imshow("Final Render", out_image);
+            image_frames.push_back(out_image.clone());
             cv::waitKey(0);
         }
     }
+
+    while(true) {
+    for (int image_idx = 0; image_idx < MAX_FRAMES; ++image_idx) {
+        cv::imshow("Final Render", image_frames[image_idx]);
+        cv::waitKey(20);
+    }}
 
     if (write_outfile) {
         outfile.close();

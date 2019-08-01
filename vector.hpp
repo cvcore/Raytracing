@@ -55,4 +55,3 @@ public:
         return (*this) * (1. / norm());
     }
 };
-
