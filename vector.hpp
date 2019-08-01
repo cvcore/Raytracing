@@ -3,7 +3,9 @@
 
 class Vector {
 public:
-    float x, y, z;
+    union{float x; float r;};
+    union{float y; float g;};
+    union{float z; float b;};
 
     Vector(float x = 0.f, float y = 0.f, float z = 0.f):
         x(x), y(y), z(z) {}

@@ -2,7 +2,7 @@
 #include <fstream>
 #include <iostream>
 #include <vector>
-//#include <opencv2/opencv.hpp>
+#include <opencv2/opencv.hpp>
 #include <ctime>
 
 #include "object.hpp"
@@ -33,72 +33,39 @@ Vector get_sky_color(const Vector& ray_direction)
     return Vector{0.7, 0.6, 1.0} * 255 * std::pow(1 - ray_direction.y, 2);
 }
 
-int main()
+
+int main(int argc, char** argv)
 {
-    std::ofstream outfile("outfile.ppm");
+    bool write_outfile{false};
+    std::ofstream outfile;
+
+    if (not parse_arguments(argc, argv, write_outfile)) {
+        return EXIT_FAILURE;
+    }
+
+    if (write_outfile) {
+        outfile.open("outfile.ppm", std::ofstream::out);
+    }
 
     const Vector Z{0, 0, 1};
     const Vector X{0.001, 0, 0};
     const Vector Y{0, 0.001, 0};
 
     std::vector<Object*> scene_objects;
-
-    scene_objects.push_back(new Sphere{Vector{1, 2, 0}, .5});
-    scene_objects.back()->set_hardness(0.75);
-    scene_objects.back()->set_diffuse_factor(0);
-    scene_objects.back()->set_specular_factor(0);
-    scene_objects.back()->set_reflectivity(0.95);
-    scene_objects.back()->set_color({255, 255, 255});
-    scene_objects.push_back(new Sphere{Vector{-1.25, .8, 0}, .25});
-    scene_objects.back()->set_diffuse_factor(0.9);
-    scene_objects.back()->set_specular_factor(1);
-    scene_objects.back()->set_reflectivity(0.05);
-    scene_objects.back()->set_color({255, 165, 0});
-
-    scene_objects.push_back(new Triangle{Vector{0, 0, 0},
-                                         Vector{-1, 1, 0},
-                                         Vector{0, 1, 1}});
-    scene_objects.back()->set_diffuse_factor(0);
-    scene_objects.push_back(new Triangle{Vector{0, 0, 0},
-                                         Vector{0, 1, -1},
-                                         Vector{-1, 1, 0}});
-    scene_objects.back()->set_diffuse_factor(0);
-    scene_objects.push_back(new Triangle{Vector{0, 0, 0},
-                                         Vector{1, 1, 0},
-                                         Vector{0, 1, -1}});
-    scene_objects.back()->set_diffuse_factor(0);
-    scene_objects.push_back(new Triangle{Vector{0, 0, 0},
-                                         Vector{0, 1, 1},
-                                         Vector{1, 1, 0}});
-    scene_objects.back()->set_diffuse_factor(0);
-    scene_objects.push_back(new Triangle{Vector{0, 2, 0},
-                                         Vector{0, 1, 1},
-                                         Vector{-1, 1, 0}});
-    scene_objects.back()->set_diffuse_factor(0);
-    scene_objects.push_back(new Triangle{Vector{0, 2, 0},
-                                         Vector{1, 1, 0},
-                                         Vector{0, 1, 1}});
-    scene_objects.back()->set_diffuse_factor(0);
-    scene_objects.push_back(new Triangle{Vector{0, 2, 0},
-                                         Vector{0, 1, -1},
-                                         Vector{1, 1, 0}});
-    scene_objects.back()->set_diffuse_factor(0);
-    scene_objects.push_back(new Triangle{Vector{0, 2, 0},
-                                         Vector{-1, 1, 0},
-                                         Vector{0, 1, -1}});
-    scene_objects.back()->set_diffuse_factor(0);
+    generate_objects(scene_objects);
 
     int height = 1024;
     int width = 1024;
     const int max_hit_bounces{100};
 
-    //    cv::Mat out_image(height, width, CV_8UC3);
+    cv::Mat out_image(height, width, CV_8UC3);
 
     outfile << "P6 " << height << " " << width << " "
             << "255 ";
 
     const clock_t begin_time = std::clock(); 
 
+    int image_idx = 0;
     for (int y = height / 2; y >= -(height / 2 - 1); --y) {
         for (int x = -(width / 2 - 1); x <= width / 2; ++x) {
 
@@ -185,7 +152,9 @@ int main()
                     }
                 }
 
-                Vector light_at{0, 100, 0};
+                Vector light_at{-20, 10, 50};
+                Vector light_color{255, 255, 255};
+                // model light source
 
                 bool point_is_directly_lit{true};
                 for (const auto& object : scene_objects) {
@@ -200,36 +169,52 @@ int main()
                         break;
                     }
                 }
-                
+
                 if (not sky_hit) {
                     const float ambient_light = 0.3;
                     if (point_is_directly_lit) {
                         const float diffuse_light = std::max(0.f, normal_at_hit.dot((light_at - ray_hit_at).unit()));
                         const float specular_light = std::max(0.f, (light_at - ray_hit_at).unit().dot(ray_direction));
-                        color = color * (ambient_light + diffuse_light) * diffuse_factor_at_hit +
-                                Vector{255, 255, 255} * 2 * std::pow(specular_light, 99) * specular_factor_at_hit;
+                        color = color * (ambient_light + diffuse_light) * diffuse_factor_at_hit  +
+                                light_color * std::pow(specular_light, hardness_factor_at_hit) * specular_factor_at_hit;
                     }
                     else {
                         color = color * ambient_light * diffuse_factor_at_hit;
                     }
                 }
 
-                final_color = final_color + color * ray_energy_left;
+                final_color = final_color + color * ray_energy_left * (1 - reflectivity_at_hit);
                 ray_energy_left *= reflectivity_at_hit;
 
                 if (ray_energy_left <= 0)
                     break;
             }
 
-            outfile << clamp<unsigned char>(0, 255, final_color.x)
-                    << clamp<unsigned char>(0, 255, final_color.y)
-                    << clamp<unsigned char>(0, 255, final_color.z);
+            final_color = clamp(0, 255, final_color);
+
+            if (write_outfile) {
+                outfile << final_color.x
+                        << final_color.y
+                        << final_color.z;
+            }
+            else {
+                out_image.at<unsigned char>(image_idx++) = final_color.b;
+                out_image.at<unsigned char>(image_idx++) = final_color.g;
+                out_image.at<unsigned char>(image_idx++) = final_color.r;
+            }
         }
     }
 
     float time_elapsed = float(std::clock() - begin_time) / CLOCKS_PER_SEC;
     std::cout << "Time elapsed: " << time_elapsed << " FPS: " << 1./time_elapsed << "\n";
 
-    outfile.close();
+    if (write_outfile) {
+        outfile.close();
+    }
+    else {
+        cv::imshow("Final Render", out_image);
+        cv::waitKey(0);
+    }
+
     return EXIT_SUCCESS;
 }

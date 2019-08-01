@@ -7,8 +7,8 @@ public:
     Object()
         : color(255, 255, 255),
           reflectivity(1),
-          diffuse_factor(0),
-          hardness_factor(0),
+          diffuse_factor(1),
+          hardness_factor(1),
           specular_factor(1)
     {
     }
@@ -163,7 +163,7 @@ public:
         const float t = std::sqrt(std::pow(radius, 2) - std::pow(s, 2));
         hit_distance = b - t;
 
-        if (hit_distance < 0)
+        if (hit_distance < 1e-6)
             return false;
 
         outgoing_ray_origin = incoming_ray_origin + incoming_ray_direction * hit_distance;
