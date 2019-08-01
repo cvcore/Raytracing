@@ -1,6 +1,7 @@
 #pragma once
 
 #include "vector.hpp"
+#include "helper.hpp"
 
 class Object {
 public:
@@ -9,13 +10,15 @@ public:
           reflectivity(1),
           diffuse_factor(1),
           hardness_factor(1),
-          specular_factor(1)
+          specular_factor(1),
+          roughness_factor(1)
     {
     }
 
     Vector color;
     float reflectivity;
     float diffuse_factor, hardness_factor, specular_factor;
+    float roughness_factor;
 
     virtual bool is_hit_by_ray(const Vector &incoming_ray_origin,
                                const Vector &incoming_ray_direction,
@@ -52,6 +55,11 @@ public:
     void set_specular_factor(float v)
     {
         specular_factor = v;
+    }
+
+    void set_roughness(float v)
+    {
+        roughness_factor = v;
     }
 };
 
@@ -168,7 +176,8 @@ public:
 
         outgoing_ray_origin = incoming_ray_origin + incoming_ray_direction * hit_distance;
         const Vector normal = (-p + incoming_ray_direction * hit_distance).unit();
-        outgoing_ray_direction = (incoming_ray_direction - normal.unit() * (incoming_ray_direction.dot(normal.unit())) * 2).unit();
+        outgoing_ray_direction = ((incoming_ray_direction - normal.unit() * (incoming_ray_direction.dot(normal.unit())) * 2).unit()
+            + (Vector{random_offset(), random_offset(), random_offset()} * roughness_factor).unit()).unit();
         outgoing_normal = (outgoing_ray_direction - incoming_ray_direction).unit();
 
         hit_color = color;
