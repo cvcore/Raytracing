@@ -41,14 +41,14 @@ void generate_objects(std::vector<Object*>& object_container)
     object_container.back()->set_specular_factor(0.1);
     object_container.back()->set_reflectivity(0.95);
     object_container.back()->set_color({255, 255, 255});
-    object_container.back()->set_roughness(0.75);
+    object_container.back()->set_roughness(0.1);
     object_container.push_back(new Sphere{Vector{-1.25, .8, 0}, .25});
     object_container.back()->set_diffuse_factor(0.9);
     object_container.back()->set_specular_factor(0.5);
     object_container.back()->set_reflectivity(0.05);
     object_container.back()->set_hardness(99);
     object_container.back()->set_color({255, 165, 0});
-    object_container.back()->set_roughness(0.75);
+    object_container.back()->set_roughness(0.1);
 
     object_container.push_back(new Triangle{Vector{0, 0, 0},
                                          Vector{-1, 1, 0},
@@ -116,7 +116,7 @@ int main(int argc, char** argv)
     const clock_t begin_time = std::clock(); 
 
     const int MAX_FRAMES = 256,
-        AA_samples = 1;
+        AA_samples = 8;
 
     for (int frame_idx = 0; frame_idx < MAX_FRAMES; ++frame_idx) {
         int image_idx = 0;
@@ -132,6 +132,11 @@ int main(int argc, char** argv)
 
                     Vector ray_origin{0, 1, -4};
                     Vector ray_direction = Vector{X * (x + random_offset() - 0.5f) + Y * (y + random_offset() - 0.5f) + Z}.unit();
+
+                    // DoF
+                    Vector sensor_shift{random_offset()*0.1f, random_offset()*0.1f, 0};
+                    ray_origin = ray_origin + sensor_shift;
+                    ray_direction = (ray_direction - sensor_shift * (1. / -ray_origin.z)).unit();
 
                     Vector ray_hit_at,
                         ray_bounced_direction,
