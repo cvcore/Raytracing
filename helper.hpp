@@ -19,17 +19,20 @@ inline Vector clamp(float min_value, float max_value, const Vector& vec)
 }
 
 
-bool parse_arguments(int argc, char** argv, bool& write_outfile)
+bool parse_arguments(int argc, char** argv, bool& write_outfile, bool& read_texture)
 {
     write_outfile = false;
-    if (argc > 2) {
-        std::cout << "Usage: " << argv[0] << " [-f]\n";
+    if (argc > 3) {
+        std::cout << "Usage: " << argv[0] << " [-f] [-t]\n";
         return false;
     }
 
     for (int i = 0; i < argc; ++i){
         if (std::strcmp(argv[i], "-f") == 0) {
             write_outfile = true;
+        }
+        if (std::strcmp(argv[i], "-t") == 0) {
+            read_texture = true;
         }
     }
 

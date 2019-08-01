@@ -11,21 +11,42 @@
 
 Vector get_ground_color(const Vector& ray_origin,
                         const Vector& ray_direction,
-                        Vector& ray_hit_at)
+                        Vector& ray_hit_at,
+                        const bool use_texture_data = false)
 {
     const float distance = std::abs(ray_origin.y / ray_direction.y);
     const float x = ray_origin.x + ray_direction.x * distance;
     const float z = ray_origin.z + ray_direction.z * distance;
 
-    ray_hit_at = ray_origin + ray_direction * distance;
+    if (not use_texture_data) {
+        ray_hit_at = ray_origin + ray_direction * distance;
 
-    if ((int)std::abs(std::floor(x)) % 2 ==
-        (int)std::abs(std::floor(z)) % 2) {
-        return {255, 0, 0};
+        if ((int)std::abs(std::floor(x)) % 2 ==
+            (int)std::abs(std::floor(z)) % 2) {
+            return {255, 0, 0};
+        }
+        else {
+            return {255, 255, 255};
+        }
     }
-    else {
-        return {255, 255, 255};
+
+    static unsigned char* texture_data{nullptr};
+    const int tex_w {600};
+    const int tex_h {400};
+    if (not texture_data) {
+        std::ifstream texture{"texture.ppm", std::ios::binary};
+        texture_data = new unsigned char[tex_w * tex_h * 3];
+        texture.read(reinterpret_cast<char*>(texture_data), 15);
+        texture.read(reinterpret_cast<char*>(texture_data), tex_w * tex_h * 3);
     }
+
+    const int tex_u = std::abs((int)((x*100)+ 1000)) % tex_w;
+    const int tex_v = std::abs((int)((z*100)+ 1100)) % tex_h;
+    const size_t color_start_idx = (tex_v * tex_w + tex_u) * 3;
+
+    return Vector {static_cast<float>(texture_data[color_start_idx]),
+                   static_cast<float>(texture_data[color_start_idx + 1]),
+                   static_cast<float>(texture_data[color_start_idx + 2]) };
 }
 
 Vector get_sky_color(const Vector& ray_direction)
@@ -87,9 +108,10 @@ void generate_objects(std::vector<Object*>& object_container)
 int main(int argc, char** argv)
 {
     bool write_outfile{false};
+    bool read_texture{false};
     std::ofstream outfile;
 
-    if (not parse_arguments(argc, argv, write_outfile)) {
+    if (not parse_arguments(argc, argv, write_outfile, read_texture)) {
         return EXIT_FAILURE;
     }
 
@@ -195,7 +217,7 @@ int main(int argc, char** argv)
                         }
                         else {
                             if (ray_direction.y < 0) {
-                                color = get_ground_color(ray_origin, ray_direction, ray_hit_at);
+                                color = get_ground_color(ray_origin, ray_direction, ray_hit_at, read_texture);
                                 normal_at_hit = {0, 1, 0};
                                 ray_bounced_direction = (ray_direction +
                                                          (normal_at_hit.unit() * (-ray_direction.dot(normal_at_hit.unit()) * 2)).unit());
