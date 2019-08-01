@@ -116,7 +116,7 @@ int main(int argc, char** argv)
     const clock_t begin_time = std::clock(); 
 
     const int MAX_FRAMES = 256,
-        AA_samples = 2;
+        AA_samples = 1;
 
     for (int frame_idx = 0; frame_idx < MAX_FRAMES; ++frame_idx) {
         int image_idx = 0;
@@ -210,7 +210,8 @@ int main(int argc, char** argv)
                             }
                         }
 
-                        Vector light_at{10 * std::cosf(7.f * frame_idx / MAX_FRAMES), 10, 10 * std::sinf(7.f * frame_idx / MAX_FRAMES)};
+                        const int light_size = 3;
+                        Vector light_at{10 * std::cosf(7.f * frame_idx / MAX_FRAMES) + random_offset() * light_size, 10, 10 * std::sinf(7.f * frame_idx / MAX_FRAMES) + random_offset() * light_size};
                         Vector light_color{255, 255, 255};
                         // model light source
 
