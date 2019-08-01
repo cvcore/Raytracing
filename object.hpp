@@ -177,7 +177,7 @@ public:
         outgoing_ray_origin = incoming_ray_origin + incoming_ray_direction * hit_distance;
         const Vector normal = (-p + incoming_ray_direction * hit_distance).unit();
         outgoing_ray_direction = ((incoming_ray_direction - normal.unit() * (incoming_ray_direction.dot(normal.unit())) * 2).unit()
-            + (Vector{random_offset(), random_offset(), random_offset()} * roughness_factor).unit()).unit();
+            + (Vector{random_offset(), random_offset(), random_offset()}.unit() * roughness_factor)).unit();
         outgoing_normal = (outgoing_ray_direction - incoming_ray_direction).unit();
 
         hit_color = color;

@@ -21,8 +21,9 @@ Vector get_ground_color(const Vector& ray_origin,
     const float x = ray_origin.x + ray_direction.x * distance;
     const float z = ray_origin.z + ray_direction.z * distance;
 
+    ray_hit_at = ray_origin + ray_direction * distance;
+
     if (not use_texture_data) {
-        ray_hit_at = ray_origin + ray_direction * distance;
 
         if ((int)std::abs(std::floor(x)) % 2 ==
             (int)std::abs(std::floor(z)) % 2) {
