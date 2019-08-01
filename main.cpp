@@ -3,15 +3,21 @@
 #include <iostream>
 #include <vector>
 //#include <opencv2/opencv.hpp>
+#include <ctime>
 
 #include "object.hpp"
 #include "vector.hpp"
+#include "helper.hpp"
 
-Vector get_ground_color(const Vector &ray_origin, const Vector &ray_direction)
+Vector get_ground_color(const Vector& ray_origin,
+                        const Vector& ray_direction,
+                        Vector& ray_hit_at)
 {
-    const float distance = -ray_origin.y / ray_direction.y;
+    const float distance = std::abs(ray_origin.y / ray_direction.y);
     const float x = ray_origin.x + ray_direction.x * distance;
     const float z = ray_origin.z + ray_direction.z * distance;
+
+    ray_hit_at = ray_origin + ray_direction * distance;
 
     if ((int)std::abs(std::floor(x)) % 2 ==
         (int)std::abs(std::floor(z)) % 2) {
@@ -22,7 +28,7 @@ Vector get_ground_color(const Vector &ray_origin, const Vector &ray_direction)
     }
 }
 
-Vector get_sky_color(const Vector &ray_direction)
+Vector get_sky_color(const Vector& ray_direction)
 {
     return Vector{0.7, 0.6, 1.0} * 255 * std::pow(1 - ray_direction.y, 2);
 }
@@ -35,63 +41,66 @@ int main()
     const Vector X{0.001, 0, 0};
     const Vector Y{0, 0.001, 0};
 
-    std::vector<Object *> scene_objects;
+    std::vector<Object*> scene_objects;
+
+    scene_objects.push_back(new Sphere{Vector{1, 2, 0}, .5});
+    scene_objects.back()->set_hardness(0.75);
+    scene_objects.back()->set_diffuse_factor(0);
+    scene_objects.back()->set_specular_factor(0);
+    scene_objects.back()->set_reflectivity(0.95);
+    scene_objects.back()->set_color({255, 255, 255});
+    scene_objects.push_back(new Sphere{Vector{-1.25, .8, 0}, .25});
+    scene_objects.back()->set_diffuse_factor(0.9);
+    scene_objects.back()->set_specular_factor(1);
+    scene_objects.back()->set_reflectivity(0.05);
+    scene_objects.back()->set_color({255, 165, 0});
 
     scene_objects.push_back(new Triangle{Vector{0, 0, 0},
                                          Vector{-1, 1, 0},
                                          Vector{0, 1, 1}});
+    scene_objects.back()->set_diffuse_factor(0);
     scene_objects.push_back(new Triangle{Vector{0, 0, 0},
                                          Vector{0, 1, -1},
                                          Vector{-1, 1, 0}});
+    scene_objects.back()->set_diffuse_factor(0);
     scene_objects.push_back(new Triangle{Vector{0, 0, 0},
                                          Vector{1, 1, 0},
                                          Vector{0, 1, -1}});
+    scene_objects.back()->set_diffuse_factor(0);
     scene_objects.push_back(new Triangle{Vector{0, 0, 0},
                                          Vector{0, 1, 1},
                                          Vector{1, 1, 0}});
-    /// Top half
+    scene_objects.back()->set_diffuse_factor(0);
     scene_objects.push_back(new Triangle{Vector{0, 2, 0},
                                          Vector{0, 1, 1},
                                          Vector{-1, 1, 0}});
+    scene_objects.back()->set_diffuse_factor(0);
     scene_objects.push_back(new Triangle{Vector{0, 2, 0},
                                          Vector{1, 1, 0},
                                          Vector{0, 1, 1}});
+    scene_objects.back()->set_diffuse_factor(0);
     scene_objects.push_back(new Triangle{Vector{0, 2, 0},
                                          Vector{0, 1, -1},
                                          Vector{1, 1, 0}});
+    scene_objects.back()->set_diffuse_factor(0);
     scene_objects.push_back(new Triangle{Vector{0, 2, 0},
                                          Vector{-1, 1, 0},
                                          Vector{0, 1, -1}});
-
-    // scene_objects.push_back(new Triangle{{-2, 0, 1},
-    //                                      {2, 0, 1},
-    //                                      {0, 3, 1}});
-    // scene_objects.back()->set_color({0, 0, 255});
-    // scene_objects.back()->set_reflectivity(0.8);
-    // scene_objects.push_back(new Triangle{{2, 0, -5},
-    //                                      {-2, 0, -5},
-    //                                      {0, 3, -5}});
-    // scene_objects.back()->set_color({0, 255, 0});
-    // scene_objects.back()->set_reflectivity(0.8);
-
-    scene_objects.push_back(new Sphere({1,2,0}, 0.5));
-    scene_objects.back()->set_color({0, 0, 0});
-    scene_objects.back()->set_reflectivity(0.95);
-    scene_objects.push_back(new Sphere({-1.25,0.8,0}, 0.25));
-    scene_objects.back()->set_color({255, 0, 0});
-    scene_objects.back()->set_reflectivity(0.95);
-
+    scene_objects.back()->set_diffuse_factor(0);
 
     int height = 1024;
     int width = 1024;
     const int max_hit_bounces{100};
 
-//    cv::Mat out_image(height, width, CV_8UC3);
+    //    cv::Mat out_image(height, width, CV_8UC3);
 
-    outfile << "P6 " << height << " " << width << " " << "255 ";
+    outfile << "P6 " << height << " " << width << " "
+            << "255 ";
 
-    for (int y = height/2; y >= -(height/2 - 1); --y) {
-        for (int x = -(width/2 - 1); x <= width/2; ++x) {
+    const clock_t begin_time = std::clock(); 
+
+    for (int y = height / 2; y >= -(height / 2 - 1); --y) {
+        for (int x = -(width / 2 - 1); x <= width / 2; ++x) {
 
             Vector color{0, 0, 0};
             Vector final_color{0, 0, 0};
@@ -101,25 +110,35 @@ int main()
 
             Vector ray_hit_at,
                 ray_bounced_direction,
-                normal;
+                normal_at_hit;
 
             float distance_to_hit;
             float reflectivity_at_hit;
             float ray_energy_left = 1.f;
 
+            float diffuse_factor_at_hit,
+                specular_factor_at_hit,
+                hardness_factor_at_hit;
+
+            bool sky_hit{false};
+
             for (int bounce = 0; bounce <= max_hit_bounces; ++bounce) {
                 bool an_object_was_hit{false};
                 float min_hit_distance{std::numeric_limits<float>::max()};
-                Object *closest_object_ptr{nullptr};
+                Object* closest_object_ptr{nullptr};
 
-                for (const auto &object : scene_objects) {
+                for (const auto& object : scene_objects) {
                     if (object->is_hit_by_ray(ray_origin,
                                               ray_direction,
                                               ray_hit_at,
                                               ray_bounced_direction,
+                                              normal_at_hit,
                                               distance_to_hit,
                                               color,
-                                              reflectivity_at_hit)) {
+                                              reflectivity_at_hit,
+                                              hardness_factor_at_hit,
+                                              diffuse_factor_at_hit,
+                                              specular_factor_at_hit)) {
 
                         if (distance_to_hit < min_hit_distance) {
                             an_object_was_hit = true;
@@ -134,36 +153,83 @@ int main()
                                                       ray_direction,
                                                       ray_hit_at,
                                                       ray_bounced_direction,
+                                                      normal_at_hit,
                                                       distance_to_hit,
                                                       color,
-                                                      reflectivity_at_hit);
+                                                      reflectivity_at_hit,
+                                                      hardness_factor_at_hit,
+                                                      diffuse_factor_at_hit,
+                                                      specular_factor_at_hit);
                     ray_origin = ray_hit_at;
                     ray_direction = ray_bounced_direction;
                 }
                 else {
                     if (ray_direction.y < 0) {
-                        color = get_ground_color(ray_origin, ray_direction);
-                        reflectivity_at_hit = 0.f;
+                        color = get_ground_color(ray_origin, ray_direction, ray_hit_at);
+                        normal_at_hit = {0, 1, 0};
+                        ray_bounced_direction = (ray_direction + 
+                        (normal_at_hit.unit() * (-ray_direction.dot(normal_at_hit.unit()) * 2)).unit());
+
+                        ray_origin = ray_hit_at;
+                        ray_direction = ray_bounced_direction;
+                    
+                        reflectivity_at_hit = 0;
+                        diffuse_factor_at_hit = 1;
+                        hardness_factor_at_hit = 0;
+                        specular_factor_at_hit = 0;
                     }
                     else {
                         color = get_sky_color(ray_direction);
                         reflectivity_at_hit = 0.f;
+                        sky_hit = true;
                     }
                 }
 
-                final_color = final_color + (color * (ray_energy_left * (1 - reflectivity_at_hit)));
+                Vector light_at{0, 100, 0};
+
+                bool point_is_directly_lit{true};
+                for (const auto& object : scene_objects) {
+                    // dummy vars
+                    Vector v1, v2, v3, v4;
+                    float f1, f2, f3, f4, f5;
+                    // test occlusion from light source
+                    if (object->is_hit_by_ray(ray_hit_at,
+                                              (light_at - ray_hit_at).unit(),
+                                              v1, v2, v3, f1, v4, f2, f3, f4, f5)) {
+                        point_is_directly_lit = false;
+                        break;
+                    }
+                }
+                
+                if (not sky_hit) {
+                    const float ambient_light = 0.3;
+                    if (point_is_directly_lit) {
+                        const float diffuse_light = std::max(0.f, normal_at_hit.dot((light_at - ray_hit_at).unit()));
+                        const float specular_light = std::max(0.f, (light_at - ray_hit_at).unit().dot(ray_direction));
+                        color = color * (ambient_light + diffuse_light) * diffuse_factor_at_hit +
+                                Vector{255, 255, 255} * 2 * std::pow(specular_light, 99) * specular_factor_at_hit;
+                    }
+                    else {
+                        color = color * ambient_light * diffuse_factor_at_hit;
+                    }
+                }
+
+                final_color = final_color + color * ray_energy_left;
                 ray_energy_left *= reflectivity_at_hit;
 
                 if (ray_energy_left <= 0)
                     break;
             }
 
-            outfile << static_cast<unsigned char>(final_color.x)
-                    << static_cast<unsigned char>(final_color.y)
-                    << static_cast<unsigned char>(final_color.z);
-            
+            outfile << clamp<unsigned char>(0, 255, final_color.x)
+                    << clamp<unsigned char>(0, 255, final_color.y)
+                    << clamp<unsigned char>(0, 255, final_color.z);
         }
     }
 
+    float time_elapsed = float(std::clock() - begin_time) / CLOCKS_PER_SEC;
+    std::cout << "Time elapsed: " << time_elapsed << " FPS: " << 1./time_elapsed << "\n";
+
+    outfile.close();
     return EXIT_SUCCESS;
 }
