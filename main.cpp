@@ -141,8 +141,8 @@ int main(int argc, char** argv)
             << "255 ";
 
 
-    const int MAX_FRAMES = 16,
-        AA_samples = 2;
+    const int MAX_FRAMES = 128,
+        AA_samples = 32;
 
     for (int frame_idx = 0; frame_idx < MAX_FRAMES; ++frame_idx) {
         int image_idx = 0;
@@ -150,7 +150,7 @@ int main(int argc, char** argv)
         float y_sample = random_offset();
 
         const clock_t begin_time = std::clock(); 
-        RotationMatrix camera_rotation(0.f, 0.f, 0.2f * frame_idx);
+        RotationMatrix camera_rotation(0.f, 2 * M_PI * frame_idx / MAX_FRAMES, 0.f);
         for (int y = height / 2; y >= -(height / 2 - 1); --y) {
             for (int x = -(width / 2 - 1); x <= width / 2; ++x) {
                 Vector aa_color{0, 0, 0};
@@ -160,13 +160,16 @@ int main(int argc, char** argv)
                     Vector final_color{0, 0, 0};
 
                     Vector ray_origin{0, 1, -4};
+                    // anti-aliasing
                     Vector ray_direction = Vector{X * (x + random_offset() - 0.5f) + Y * (y + random_offset() - 0.5f) + Z}.unit();
+                    ray_origin = camera_rotation * ray_origin;
                     ray_direction = camera_rotation * ray_direction;
 
                     // DoF
                     Vector sensor_shift{random_offset()*0.1f, random_offset()*0.1f, 0};
+                    sensor_shift = camera_rotation * sensor_shift;
                     ray_origin = ray_origin + sensor_shift;
-                    ray_direction = (ray_direction - sensor_shift * (1. / -ray_origin.z)).unit();
+                    ray_direction = (ray_direction - sensor_shift * (1. / 4.)).unit();
 
                     Vector ray_hit_at,
                         ray_bounced_direction,
@@ -246,7 +249,9 @@ int main(int argc, char** argv)
                         }
 
                         const int light_size = 3;
-                        Vector light_at{10 * std::cosf(7.f * frame_idx / MAX_FRAMES) + random_offset() * light_size, 10, 10 * std::sinf(7.f * frame_idx / MAX_FRAMES) + random_offset() * light_size};
+                        Vector light_at{10 * std::cosf(7.f * frame_idx / MAX_FRAMES) + random_offset() * light_size,
+                                        10,
+                                        10 * std::sinf(7.f * frame_idx / MAX_FRAMES) + random_offset() * light_size};
                         Vector light_color{255, 255, 255};
                         // model light source
 
@@ -307,14 +312,14 @@ int main(int argc, char** argv)
         if (not write_outfile) {
             cv::imshow("Final Render", out_image);
             image_frames.push_back(out_image.clone());
-            cv::waitKey(0);
+            cv::waitKey(20);
         }
     }
 
     while(true) {
     for (int image_idx = 0; image_idx < MAX_FRAMES; ++image_idx) {
         cv::imshow("Final Render", image_frames[image_idx]);
-        cv::waitKey(20);
+        cv::waitKey(40);
     }}
 
     if (write_outfile) {

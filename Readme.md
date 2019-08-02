@@ -1,5 +1,9 @@
 # Raytracing from Scratch
 
+Final Result (32x AA, 128 Frames):
+
+![render](render.gif)
+
 Full Credit and thanks to: [Nikolaus Mayer: Let's Build a Raytracer, From Scratch](https://github.com/nikolausmayer/raytracing-from-scratch)
 
 __Things implemented:__
@@ -10,6 +14,7 @@ __Things implemented:__
 - Reflection (ray bouncing)
 - Lighting (the Phong Model)
 - Shading
+- Anti-aliasing
 - Surface roughness
 - Depth of field
 - Texture
